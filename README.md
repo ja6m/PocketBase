@@ -10,7 +10,7 @@ Because writes are only ever appended, overwritten and deleted keys leave stale 
 
 ### On-disk format
 
-The database is a single binary log file (e.g. `tinydb.log`). Every `SET` or `DEL` appends one fixed-layout record to the end of that file — nothing already on disk is ever rewritten or overwritten in place:
+The database is a single binary log file (e.g. `pocketdb.log`). Every `SET` or `DEL` appends one fixed-layout record to the end of that file — nothing already on disk is ever rewritten or overwritten in place:
 
 ```
 [uint32_t key_len][key bytes][uint32_t value_len][value bytes][uint8_t tombstone]

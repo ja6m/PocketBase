@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 
     std::string line;
     while (true) {
-        std::cout << "pocketdb> ";
+        std::cout << "pocketbase> ";
         if (!std::getline(std::cin, line)) break; // EOF (Ctrl-D)
         if (line.empty()) continue;
 
