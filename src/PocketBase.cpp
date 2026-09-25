@@ -31,6 +31,7 @@ static void printHelp() {
         "  GET <key>              fetch a value\n"
         "  DEL <key>              delete a key\n"
         "  SCAN [prefix]          list keys, optionally filtered by prefix\n"
+        "  RANGE <start> [end]    list keys in [start, end] (end omitted = to the last key)\n"
         "  COMPACT                rewrite the log to drop stale/deleted entries\n"
         "  COUNT                  show number of live keys\n"
         "  HELP                   show this message\n"
@@ -101,6 +102,22 @@ int main(int argc, char** argv) {
         }
         else if (cmd == "SCAN") {
             auto keys = db.scan(rest);
+            if (keys.empty()) {
+                std::cout << "(no matching keys)\n";
+            }
+            else {
+                for (const auto& k : keys) std::cout << "  " << k << "\n";
+            }
+
+        }
+        else if (cmd == "RANGE") {
+            std::string start, end;
+            splitFirstWord(rest, start, end);
+            if (start.empty()) {
+                std::cout << "usage: RANGE <start> [end]\n";
+                continue;
+            }
+            auto keys = db.range(start, end);
             if (keys.empty()) {
                 std::cout << "(no matching keys)\n";
             }
