@@ -1,8 +1,37 @@
 #include "kvstore.h"
 
 #include <stdexcept>
+#include <cstdio>
 #include <cstring>
 #include <cstdint>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
+// Replaces `dst` with `src` in one atomic step; returns false on failure.
+//  - Windows: std::rename() fails if dst exists, and remove-then-rename leaves
+//    a gap where a crash loses the database. MoveFileExW with
+//    MOVEFILE_REPLACE_EXISTING does the swap in one call, and WRITE_THROUGH
+//    makes it wait until the move is flushed to disk.
+//  - POSIX: rename() already atomically replaces an existing destination.
+static bool replaceFileAtomically(const std::string& src, const std::string& dst) {
+#ifdef _WIN32
+    // Convert UTF-8 paths to wide strings for the W API.
+    auto widen = [](const std::string& s) {
+        int n = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+        std::wstring w(n > 0 ? n - 1 : 0, L'\0');
+        if (n > 1) MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, w.data(), n);
+        return w;
+    };
+    return MoveFileExW(widen(src).c_str(), widen(dst).c_str(),
+                       MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+#else
+    return std::rename(src.c_str(), dst.c_str()) == 0;
+#endif
+}
 
 KVStore::KVStore(const std::string& path) : path_(path) {
     // Open for read+write, create if missing, keep existing contents.
@@ -201,10 +230,21 @@ void KVStore::compact() {
         }
     }
 
+    // Close our handle first (Windows won't replace a file that's open), then
+    // swap the compacted file in with a single atomic call. There is no
+    // moment where neither the old log nor the new one exists on disk.
     log_.close();
-    std::remove(path_.c_str());
-    std::rename(tmp_path.c_str(), path_.c_str());
+    if (!replaceFileAtomically(tmp_path, path_)) {
+        // The swap failed, so the old log is still intact. Reopen it so the
+        // store stays usable (its offsets are still valid), drop the temp
+        // file, and report the error instead of continuing in a broken state.
+        log_.clear();
+        log_.open(path_, std::ios::in | std::ios::out | std::ios::binary);
+        std::remove(tmp_path.c_str());
+        throw std::runtime_error("KVStore: could not replace log with compacted file");
+    }
 
+    log_.clear();
     log_.open(path_, std::ios::in | std::ios::out | std::ios::binary);
     if (!log_.is_open()) throw std::runtime_error("KVStore: could not reopen log after compaction");
 
