@@ -18,8 +18,8 @@
 // On startup we replay the whole log sequentially to rebuild an in-memory
 // index (key -> byte offset of that key's most recent record). This is the
 // classic Bitcask design: writes are O(1) appends, reads are one index
-// lookup plus one disk seek+read, and durability comes from the fact that
-// every mutation is fsync'd to disk before we consider it complete.
+// lookup plus one disk seek+read, and every mutation is flushed to the OS
+// before we consider it complete (flush only, not a true fsync yet).
 // Crucially, RAM usage now scales with the number of keys, not the total
 // size of the values -- the log on disk can be far bigger than memory.
 //

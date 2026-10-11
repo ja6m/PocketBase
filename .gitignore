@@ -22,3 +22,6 @@ pocketdb.log
 # Compiled artifacts
 build/
 pocketbase
+
+#AI Tools
+CLAUDE.md
