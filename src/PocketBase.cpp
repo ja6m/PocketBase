@@ -1,8 +1,10 @@
 #include "kvstore.h"
+#include "sql_lexer.h"
 
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 // Splits input into the command word and "the rest of the line", since
 // values are allowed to contain spaces (e.g. SET name John Smith).
@@ -34,6 +36,7 @@ static void printHelp() {
         "  RANGE <start> [end]    list keys in [start, end] (end omitted = to the last key)\n"
         "  COMPACT                rewrite the log to drop stale/deleted entries\n"
         "  COUNT                  show number of live keys\n"
+        "  TOKENS <sql...>        show how the SQL tokenizer splits a statement\n"
         "  HELP                   show this message\n"
         "  EXIT / QUIT            leave the REPL\n";
 }
@@ -133,6 +136,22 @@ int main(int argc, char** argv) {
         }
         else if (cmd == "COUNT") {
             std::cout << db.size() << "\n";
+
+        }
+        else if (cmd == "TOKENS") {
+            // Debug aid for Stage 3: lets us check the tokenizer by hand
+            // before the parser exists to consume its output.
+            try {
+                for (const auto& t : tokenize(rest)) {
+                    std::cout << "  " << t.line << ":" << t.column << "  "
+                              << tokenTypeName(t.type);
+                    if (!t.text.empty()) std::cout << "  [" << t.text << "]";
+                    std::cout << "\n";
+                }
+            }
+            catch (const std::runtime_error& e) {
+                std::cout << e.what() << "\n";
+            }
 
         }
         else {
