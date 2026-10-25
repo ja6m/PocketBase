@@ -1,30 +1,11 @@
 #include "kvstore.h"
 #include "sql_lexer.h"
+#include "utilities.h"
 
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <stdexcept>
-
-// Splits input into the command word and "the rest of the line", since
-// values are allowed to contain spaces (e.g. SET name John Smith).
-static void splitFirstWord(const std::string& line, std::string& first, std::string& rest) {
-    size_t pos = line.find_first_of(" \t");
-    if (pos == std::string::npos) {
-        first = line;
-        rest.clear();
-    }
-    else {
-        first = line.substr(0, pos);
-        size_t restStart = line.find_first_not_of(" \t", pos);
-        rest = (restStart == std::string::npos) ? "" : line.substr(restStart);
-    }
-}
-
-static std::string toUpper(std::string s) {
-    for (auto& c : s) c = static_cast<char>(::toupper(static_cast<unsigned char>(c)));
-    return s;
-}
 
 static void printHelp() {
     std::cout <<

@@ -142,10 +142,12 @@
     <ClCompile Include="kvstore.cpp" />
     <ClCompile Include="PocketBase.cpp" />
     <ClCompile Include="sql_lexer.cpp" />
+    <ClCompile Include="utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kvstore.h" />
     <ClInclude Include="sql_lexer.h" />
+    <ClInclude Include="utilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
