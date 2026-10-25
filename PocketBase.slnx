@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="PocketBase/PocketBase.vcxproj" Id="f1169485-ef2f-4e35-be92-58b83ae4a8c7" />
+</Solution>
